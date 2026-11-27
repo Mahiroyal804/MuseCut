@@ -40,6 +40,7 @@ import numpy as np
 from PIL import Image
 
 from musecut import keyframes as kf_mod
+from musecut import providers as prov_mod
 from musecut.render import Renderer
 from musecut.timeline import new_project
 
@@ -50,6 +51,14 @@ POOL = os.path.expanduser("~/workspace/tools/footage-library/pool")
 VAN_CLIP = os.path.join(POOL, "pexels_1192116.mp4")
 PROOF = os.path.expanduser(
     "~/workspace/your_files/musecut-round7-whip-pan.mp4")
+
+# The round-7 capability pin asserts vocal_separation is "done",
+# which needs onnxruntime AND the UVR model on disk.
+NEEDS_VS = unittest.skipUnless(
+    prov_mod.onnxruntime_available()
+    and prov_mod.model_status("uvr-mdx-net-inst-hq-3")["status"] == "present",
+    "UVR vocal-separation model not on disk — run with the model "
+    "downloaded (see musecut/providers.py)")
 
 
 def _run(cmd, **kw):
@@ -160,6 +169,7 @@ class Round7Test(unittest.TestCase):
         self.assertLessEqual(width, 620, f"blob {width}px, want ~570")
 
     # ---- round-7 capability pins -----------------------------------
+    @NEEDS_VS
     def test_round7_capabilities(self):
         """vocal_separation + ai_inpainting wired in round 7.
 

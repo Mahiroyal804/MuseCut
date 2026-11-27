@@ -97,6 +97,7 @@ def _ffprobe_dur(path):
 
 
 class TestEyeCorrectionModel(unittest.TestCase):
+    @NEEDS_MODEL
     def test_model_verified(self):
         info = ec_mod.verify_model()
         self.assertEqual(info["status"], "verified", info)

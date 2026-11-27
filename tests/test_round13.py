@@ -74,6 +74,12 @@ NEEDS_MODEL = unittest.skipUnless(
     os.path.isfile(ls_mod.model_path())
     and os.path.getsize(ls_mod.model_path()) == ls_mod.MODEL_SIZE,
     "wav2lip model not on disk")
+NEEDS_VOICE = unittest.skipUnless(
+    os.path.isfile(VOICE),
+    "car08 voiceover missing: " + VOICE)
+NEEDS_PHOTO = unittest.skipUnless(
+    os.path.isfile(PHOTO),
+    "gate photo missing: " + PHOTO)
 
 
 def _mouth_diff(a, b):
@@ -82,6 +88,7 @@ def _mouth_diff(a, b):
 
 
 class TestLipSyncMel(unittest.TestCase):
+    @NEEDS_VOICE
     def test_mel_shape_and_range(self):
         wav = ls_mod.load_wav_16k(VOICE)
         mel = ls_mod.mel_spectrogram(wav[:16000])  # first second only
@@ -90,6 +97,7 @@ class TestLipSyncMel(unittest.TestCase):
         self.assertGreaterEqual(float(mel.min()), -4.0)
         self.assertLessEqual(float(mel.max()), 4.0)
 
+    @NEEDS_VOICE
     def test_mel_chunks(self):
         wav = ls_mod.load_wav_16k(VOICE)
         mel = ls_mod.mel_spectrogram(wav[:16000])
@@ -104,6 +112,7 @@ class TestLipSyncMel(unittest.TestCase):
 
 
 @NEEDS_CV2
+@NEEDS_PHOTO
 class TestLipSyncFace(unittest.TestCase):
     def test_detect_face_real_photo(self):
         import cv2

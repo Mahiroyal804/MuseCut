@@ -122,16 +122,21 @@ class Round7InpaintTest(unittest.TestCase):
             m = np.zeros((720, 1280), dtype=np.uint8)
             m[AC_PX] = 255
             Image.fromarray(m).save(cls.png_mask)
-        if not HAS_CV2:
-            # The renders below need cv2; the tests that use them
-            # skip without it, so do not fail setUpClass here.
-            return
-        # Shared renders (one per mask form; each ~12 s).
+        # Shared renders (one per mask form; each ~12 s). The paths
+        # are set even when the renders cannot be built, so the
+        # tests that use them can skip on the missing file.
         cls.out_rect = os.path.join(WORK, "inpaint-rect.mp4")
+        cls.out_png = os.path.join(WORK, "inpaint-png.mp4")
+        cls.out_range = os.path.join(WORK, "inpaint-range.mp4")
+        cls.out_beau = os.path.join(WORK, "beautify-gated.mp4")
+        if not HAS_CV2 or not os.path.isfile(cls.van2s):
+            # The renders below need cv2 and the van clip; the tests
+            # that use them skip without them, so do not fail
+            # setUpClass here.
+            return
         if not os.path.isfile(cls.out_rect):
             inp_mod.inpaint_clip(cls.van2s, cls.out_rect, AC_RECT,
                                  workdir=os.path.join(WORK, "inp-rect"))
-        cls.out_png = os.path.join(WORK, "inpaint-png.mp4")
         if not os.path.isfile(cls.out_png):
             # sample_fps=10 (the default) so the rendered frame at
             # 0.5 s is the source frame at 0.533 s, like the rect
@@ -140,13 +145,11 @@ class Round7InpaintTest(unittest.TestCase):
             # would break the unmasked comparison below.
             inp_mod.inpaint_clip(cls.van2s, cls.out_png, cls.png_mask,
                                  workdir=os.path.join(WORK, "inp-png"))
-        cls.out_range = os.path.join(WORK, "inpaint-range.mp4")
         if not os.path.isfile(cls.out_range):
             rect = dict(AC_RECT, t0=1.0, t1=2.0)
             inp_mod.inpaint_clip(cls.van2s, cls.out_range, rect,
                                  sample_fps=5.0,
                                  workdir=os.path.join(WORK, "inp-range"))
-        cls.out_beau = os.path.join(WORK, "beautify-gated.mp4")
         if not os.path.isfile(cls.out_beau):
             # (round 9) re-rendered with the person gate (the default
             # since v0.11.0): the old "beautify.mp4" was the ungated
@@ -198,6 +201,10 @@ class Round7InpaintTest(unittest.TestCase):
             inp_mod.inpaint_frame(np.zeros((50, 50), np.uint8), mask)
 
     # ---- cv2 missing: clear error naming the module ---------------
+    @unittest.skipIf(
+        HAS_CV2,
+        "cv2 is installed in this Python — the missing-cv2 error "
+        "path cannot be exercised here")
     def test_inpaint_cv2_missing_error(self):
         script = (
             "import sys; sys.path.insert(0, %r)\n"
@@ -219,6 +226,8 @@ class Round7InpaintTest(unittest.TestCase):
     # ---- inpaint_clip: validation ----------------------------------
     @NEEDS_CV2
     def test_inpaint_clip_validation(self):
+        if not os.path.isfile(self.van2s):
+            self.skipTest("footage clip missing: " + self.van2s)
         with self.assertRaises(FileNotFoundError):
             inp_mod.inpaint_clip("nope.mp4", "out.mp4", AC_RECT)
         with self.assertRaises(ValueError):
@@ -245,6 +254,8 @@ class Round7InpaintTest(unittest.TestCase):
     # ---- inpaint_clip: the AC unit is gone, surroundings intact ----
     @NEEDS_CV2
     def test_inpaint_clip_removes_ac_unit(self):
+        if not os.path.isfile(self.out_rect):
+            self.skipTest("inpaint render missing: " + self.out_rect)
         probe = _probe(self.out_rect,
                        "codec_type,codec_name,width,height")
         v = _vstream(probe)
@@ -275,6 +286,8 @@ class Round7InpaintTest(unittest.TestCase):
     # ---- inpaint_clip: static PNG mask works the same --------------
     @NEEDS_CV2
     def test_inpaint_clip_static_png_mask(self):
+        if not os.path.isfile(self.out_png):
+            self.skipTest("inpaint render missing: " + self.out_png)
         probe = _probe(self.out_png, "codec_type,width,height")
         v = _vstream(probe)
         self.assertEqual((v["width"], v["height"]), (1280, 720))
@@ -292,6 +305,8 @@ class Round7InpaintTest(unittest.TestCase):
     # ---- inpaint_clip: rect t0/t1 limits the effect in time -------
     @NEEDS_CV2
     def test_inpaint_clip_time_range(self):
+        if not os.path.isfile(self.out_range):
+            self.skipTest("inpaint render missing: " + self.out_range)
         import cv2
         mask = np.zeros((720, 1280), dtype=np.uint8)
         mask[AC_PX] = 255
@@ -350,6 +365,8 @@ class Round7InpaintTest(unittest.TestCase):
     # ---- beautify_clip: renders; honest numbers on a faceless clip
     @NEEDS_CV2
     def test_beautify_clip_renders(self):
+        if not os.path.isfile(self.out_beau):
+            self.skipTest("beautify render missing: " + self.out_beau)
         probe = _probe(self.out_beau, "codec_type,width,height")
         v = _vstream(probe)
         self.assertEqual((v["width"], v["height"]), (1280, 720))

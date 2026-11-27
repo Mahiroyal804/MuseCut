@@ -84,6 +84,7 @@ URDU_RE = re.compile(r"[\u0600-\u06FF]")
 
 
 class TestTranslateModels(unittest.TestCase):
+    @NEEDS_MODELS
     def test_models_verified(self):
         info = tr_mod.verify_models()
         self.assertEqual(info["overall"], "verified", info)
@@ -107,6 +108,7 @@ class TestTranslateModels(unittest.TestCase):
             dec_out = sess["decoder"].get_outputs()[0]
             self.assertEqual(dec_out.name, "logits")
 
+    @NEEDS_MODELS
     def test_available_pairs(self):
         self.assertEqual(sorted(tr_mod.available_pairs()),
                          [("en", "es"), ("en", "ur")])
@@ -286,6 +288,8 @@ class TestAiTranslate(unittest.TestCase):
             ai_mod.ai_translate("/nonexistent/nope.txt",
                                 os.path.join(WORK, "x.txt"))
 
+    @NEEDS_ORT
+    @NEEDS_MODELS
     def test_capabilities_done(self):
         caps = ai_mod.capabilities()
         self.assertEqual(caps["ai_translate"]["status"], "done")

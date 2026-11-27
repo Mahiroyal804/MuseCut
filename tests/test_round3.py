@@ -34,6 +34,7 @@ from musecut import __version__  # noqa: E402
 from musecut import ai as ai_mod  # noqa: E402
 from musecut import providers as prov_mod  # noqa: E402
 from musecut import track as track_mod  # noqa: E402
+from musecut import tts as tts_mod  # noqa: E402
 from musecut.render import RenderError, Renderer, probe_media  # noqa: E402
 from musecut.render import _expand_cover  # noqa: E402
 from musecut.timeline import TimelineError, validate_timeline  # noqa: E402
@@ -48,6 +49,23 @@ CAR_CLIP = os.path.join(POOL, "mixkit_34562_1080.mp4")
 # 16:9 minivan clip for the smart-reframe demo (car drives left
 # across the frame, conf 0.88-0.90).
 VAN_CLIP = os.path.join(POOL, "pexels_1192116.mp4")
+
+
+def _fully_provisioned():
+    """True when this machine has everything test_providers_honest
+    pins: the Muse TTS binary, onnxruntime, and the YOLOv5n /
+    Real-ESRGAN / RMBG-1.4 models on disk."""
+    return (os.path.isfile(tts_mod.MUSE_TTS_BIN)
+            and prov_mod.onnxruntime_available()
+            and all(prov_mod.model_status(m)["status"] == "present"
+                    for m in ("yolov5n", "realesrgan-x4plus", "rmbg-1-4")))
+
+
+NEEDS_PROVISIONED = unittest.skipUnless(
+    _fully_provisioned(),
+    "provider wiring test needs the fully provisioned machine "
+    "(Muse TTS binary + onnxruntime + YOLOv5n / Real-ESRGAN / "
+    "RMBG-1.4 models on disk)")
 
 
 def _run(cmd, **kw):
@@ -116,6 +134,7 @@ class Round3Test(unittest.TestCase):
         with open(os.path.join(ROOT, "README.md")) as f:
             self.assertIn("0.21.0", f.read())
 
+    @NEEDS_PROVISIONED
     def test_providers_honest(self):
         st = prov_mod.backend_status()
         self.assertEqual(st["version"], __version__)

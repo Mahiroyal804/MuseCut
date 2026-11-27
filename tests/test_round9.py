@@ -47,6 +47,7 @@ import numpy as np
 from PIL import Image
 
 from musecut import beautify as beau_mod
+from musecut import track as track_mod
 from musecut.render import Renderer, probe_media
 from musecut.timeline import TEXT_ANIMATIONS
 
@@ -192,6 +193,12 @@ class Round9Test(unittest.TestCase):
     # ---- detect_person_boxes ---------------------------------------
     @NEEDS_CV2
     def test_detect_person_boxes_van_empty_person_found(self):
+        if not os.path.isfile(self.van2s) \
+                or not os.path.isfile(self.person2s) \
+                or not track_mod.model_ready():
+            self.skipTest(
+                "person-box test needs the van/person clips + "
+                "YOLOv5n model")
         van = cv2.imread(_grab(self.van2s, 1.0,
                                os.path.join(WORK, "r9-van1.jpg")))
         self.assertEqual(beau_mod.detect_person_boxes(van), [])
@@ -231,6 +238,10 @@ class Round9Test(unittest.TestCase):
     # ---- beautify_frame: gated real person frame --------------------
     @NEEDS_CV2
     def test_beautify_frame_gated_person_frame(self):
+        if not os.path.isfile(self.person2s) \
+                or not track_mod.model_ready():
+            self.skipTest(
+                "gated beautify needs the person clip + YOLOv5n model")
         per = cv2.imread(_grab(self.person2s, 0.5,
                                os.path.join(WORK, "r9-per2.jpg")))
         boxes = beau_mod.detect_person_boxes(per)
@@ -255,6 +266,9 @@ class Round9Test(unittest.TestCase):
     # ---- beautify_clip: gated plates -------------------------------
     @NEEDS_CV2
     def test_beautify_clip_gated_van_plates(self):
+        if not os.path.isfile(self.van2s) or not track_mod.model_ready():
+            self.skipTest(
+                "gated beautify needs the van clip + YOLOv5n model")
         out = os.path.join(WORK, "beau-van-gated.mp4")
         wd = os.path.join(WORK, "beau-van-gated-wd")
         if not os.path.isfile(out):
@@ -281,6 +295,10 @@ class Round9Test(unittest.TestCase):
 
     @NEEDS_CV2
     def test_beautify_clip_gated_person_plates(self):
+        if not os.path.isfile(self.person2s) \
+                or not track_mod.model_ready():
+            self.skipTest(
+                "gated beautify needs the person clip + YOLOv5n model")
         out = os.path.join(WORK, "beau-per-gated.mp4")
         wd = os.path.join(WORK, "beau-per-gated-wd")
         if not os.path.isfile(out):

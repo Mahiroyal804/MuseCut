@@ -32,6 +32,7 @@ from musecut import bgremove as bg_mod
 from musecut import captions as cap_mod
 from musecut import matting as mat_mod
 from musecut import providers as prov_mod
+from musecut import track as track_mod
 from musecut.render import Renderer, probe_media
 from musecut.timeline import (CAPTION_STYLES, TimelineError, new_project,
                               validate_timeline)
@@ -75,6 +76,11 @@ EIGHT_K_PROOF = os.path.expanduser(
     "~/workspace/your_files/musecut-tests/8k-proof.mp4")
 
 
+NEEDS_BG = unittest.skipUnless(
+    bg_mod.model_ready(),
+    "RMBG-1.4 model not on disk — run with the model downloaded")
+
+
 class Round6Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -89,7 +95,9 @@ class Round6Test(unittest.TestCase):
         # tests (sample_fps=2: 4 masks, ~17 s of inference + refine).
         cls.mask = os.path.join(MEDIA, "van_refined_mask.mp4")
         cls.plate = os.path.join(MEDIA, "van_clean_plate.mp4")
-        if not os.path.isfile(cls.mask) or not os.path.isfile(cls.plate):
+        if (not os.path.isfile(cls.mask)
+                or not os.path.isfile(cls.plate)) \
+                and os.path.isfile(cls.van2s):
             mat_mod.make_refined_plates(
                 cls.van2s, cls.mask, cls.plate, sample_fps=2.0,
                 workdir=os.path.join(WORK, "matwork"))
@@ -218,8 +226,9 @@ class Round6Test(unittest.TestCase):
 
     # ---- real-frame measurement: refinement improves the edge -----
     def test_real_frame_refinement_improves(self):
-        if not os.path.isfile(self.van2s):
-            self.skipTest("footage clip missing: " + self.van2s)
+        if not os.path.isfile(self.van2s) or not bg_mod.model_ready():
+            self.skipTest(
+                "refinement needs the van clip + RMBG-1.4 model")
         frame = os.path.join(WORK, "meas_frame.png")
         res = _run(["ffmpeg", "-hide_banner", "-y", "-v", "error",
                     "-ss", "0.5", "-i", self.van2s, "-frames:v", "1",
@@ -240,6 +249,9 @@ class Round6Test(unittest.TestCase):
 
     # ---- refined plates exist and are frame-aligned ---------------
     def test_refined_plates_built(self):
+        if not os.path.isfile(self.mask) or not os.path.isfile(self.plate):
+            self.skipTest(
+                "refined plates missing: " + self.mask)
         self.assertTrue(os.path.isfile(self.mask))
         self.assertTrue(os.path.isfile(self.plate))
         pm = probe_media(self.mask)
@@ -256,6 +268,11 @@ class Round6Test(unittest.TestCase):
 
     # ---- ai_matting renders through the engine -------------------
     def test_ai_matting_renders(self):
+        if not os.path.isfile(self.van2s) \
+                or not os.path.isfile(self.mask) \
+                or not os.path.isfile(self.plate):
+            self.skipTest(
+                "matting render needs the van clip + refined plates")
         out = os.path.join(WORK, "matting.mp4")
         ai_mod.ai_matting(self.van2s, out, background="#FF00FF",
                           mask_video=self.mask, rgb_plate=self.plate)
@@ -275,6 +292,11 @@ class Round6Test(unittest.TestCase):
 
     # ---- ai_matting transparent cutout keeps the alpha plane ------
     def test_ai_matting_cutout_alpha(self):
+        if not os.path.isfile(self.van2s) \
+                or not os.path.isfile(self.mask) \
+                or not os.path.isfile(self.plate):
+            self.skipTest(
+                "matting cutout needs the van clip + refined plates")
         out = os.path.join(WORK, "matting_cutout.mov")
         ai_mod.ai_matting(self.van2s, out, background="transparent",
                           mask_video=self.mask, rgb_plate=self.plate)
@@ -300,6 +322,8 @@ class Round6Test(unittest.TestCase):
 
     # ---- ai_matting validation ------------------------------------
     def test_ai_matting_validation(self):
+        if not os.path.isfile(self.van2s):
+            self.skipTest("footage clip missing: " + self.van2s)
         with self.assertRaises(FileNotFoundError):
             ai_mod.ai_matting("nope.mp4", "out.mp4")
         with self.assertRaises(ValueError):
@@ -308,6 +332,7 @@ class Round6Test(unittest.TestCase):
                               rgb_plate=self.plate, feather_px=-1)
 
     # ---- capabilities now list matting as done --------------------
+    @NEEDS_BG
     def test_capabilities_matting_done(self):
         caps = ai_mod.capabilities()
         self.assertEqual(caps["ai_matting"]["status"], "done")
@@ -323,8 +348,9 @@ class Round6Test(unittest.TestCase):
         show the car moving left at the same speed on both sides of
         the cut, with only a small position step at the cut itself.
         """
-        if not os.path.isfile(self.van2s):
-            self.skipTest("footage clip missing: " + self.van2s)
+        if not os.path.isfile(self.van2s) or not track_mod.model_ready():
+            self.skipTest(
+                "match-on-action needs the van clip + YOLOv5n model")
         seg_b = os.path.join(MEDIA, "moa-segB.mp4")
         res = _run(["ffmpeg", "-hide_banner", "-y", "-v", "error",
                     "-ss", "0.75", "-i", self.van2s, "-t", "0.5",
@@ -365,6 +391,9 @@ class Round6Test(unittest.TestCase):
 
     # ---- 8K proof file is a real 7680x4320 render ----------------
     def test_8k_proof_file(self):
+        if not os.path.isfile(EIGHT_K_PROOF):
+            self.skipTest("round-2 8K proof file missing: "
+                          + EIGHT_K_PROOF)
         self.assertTrue(os.path.isfile(EIGHT_K_PROOF),
                         "round-2 8K proof file missing")
         probe = _probe(EIGHT_K_PROOF,

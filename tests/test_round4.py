@@ -79,6 +79,15 @@ def _car_centre(png_path):
     return round(((x1 + x2) / 2) / img.size[0], 3), best["conf"]
 
 
+NEEDS_BG = unittest.skipUnless(
+    bg_mod.model_ready(),
+    "RMBG-1.4 model not on disk — run with the model downloaded")
+NEEDS_BG_TRACK = unittest.skipUnless(
+    bg_mod.model_ready() and track_mod.model_ready(),
+    "RMBG-1.4 / YOLOv5n models not on disk — run with the models "
+    "downloaded")
+
+
 class Round4Test(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -95,7 +104,7 @@ class Round4Test(unittest.TestCase):
         # 4 masks, ~17 s of inference — the pipeline, not the
         # quality, is what these tests assert).
         cls.mask = os.path.join(MEDIA, "van_mask.mp4")
-        if not os.path.isfile(cls.mask):
+        if not os.path.isfile(cls.mask) and os.path.isfile(cls.van2s):
             bg_mod.make_mask_video(cls.van2s, cls.mask, sample_fps=2.0,
                                    workdir=os.path.join(WORK, "bgwork"))
 
@@ -108,6 +117,7 @@ class Round4Test(unittest.TestCase):
         with open(os.path.join(ROOT, "README.md")) as f:
             self.assertIn("0.21.0", f.read())
 
+    @NEEDS_BG
     def test_providers_rmbg_registered(self):
         info = prov_mod.KNOWN_MODELS["rmbg-1-4"]
         self.assertEqual(info["size_bytes"], 176153355)
@@ -150,6 +160,9 @@ class Round4Test(unittest.TestCase):
 
     # ---- tracker: handover on the van clip ----------------------
     def test_tracker_handover_van(self):
+        if not os.path.isfile(self.van2s) or not track_mod.model_ready():
+            self.skipTest(
+                "tracking needs the van clip + YOLOv5n model")
         tr = track_mod.track_object(self.van2s, class_name="car",
                                     sample_fps=4.0)
         frames = tr["frames"]
@@ -173,6 +186,9 @@ class Round4Test(unittest.TestCase):
 
     # ---- smart reframe: subject centred through the handover ----
     def test_reframe_fix_renders(self):
+        if not os.path.isfile(self.van2s) or not track_mod.model_ready():
+            self.skipTest(
+                "smart reframe needs the van clip + YOLOv5n model")
         tpath = os.path.join(WORK, "reframe4.json")
         ai_mod.smart_reframe(self.van2s, tpath, class_name="car",
                              width=720, height=1280)
@@ -199,6 +215,7 @@ class Round4Test(unittest.TestCase):
                                    msg=f"t={t}s centre {cx} (conf {conf})")
 
     # ---- RMBG model ----------------------------------------------
+    @NEEDS_BG
     def test_rmbg_session(self):
         self.assertTrue(bg_mod.model_ready())
         session = bg_mod._load_session()
@@ -208,6 +225,9 @@ class Round4Test(unittest.TestCase):
         self.assertEqual(outs, ["output"])
 
     def test_segment_frame_mask(self):
+        if not os.path.isfile(self.van2s) or not bg_mod.model_ready():
+            self.skipTest(
+                "mask segmentation needs the van clip + RMBG-1.4 model")
         from PIL import Image
         session = bg_mod._load_session()
         frame = os.path.join(WORK, "seg_frame.png")
@@ -227,6 +247,9 @@ class Round4Test(unittest.TestCase):
 
     # ---- background removal through the engine -------------------
     def test_remove_background_renders(self):
+        if not os.path.isfile(self.van2s) or not os.path.isfile(self.mask):
+            self.skipTest(
+                "background removal needs the van clip + mask video")
         out = os.path.join(WORK, "bgremove.mp4")
         ai_mod.remove_background(
             self.van2s, out, background="#FF00FF",
@@ -249,6 +272,9 @@ class Round4Test(unittest.TestCase):
                          f"car pixel is magenta: {car_px}")
 
     def test_auto_cutout_alpha(self):
+        if not os.path.isfile(self.van2s) or not os.path.isfile(self.mask):
+            self.skipTest(
+                "auto cutout needs the van clip + mask video")
         out = os.path.join(WORK, "cutout.mov")
         ai_mod.auto_cutout(self.van2s, out, mask_video=self.mask)
         probe = _probe(out, "codec_type,pix_fmt,codec_name")
@@ -304,6 +330,7 @@ class Round4Test(unittest.TestCase):
                                       "background": "#FF00FF"}}))
 
     # ---- capabilities report the new feature honestly ------------
+    @NEEDS_BG_TRACK
     def test_capabilities_bg_done(self):
         caps = ai_mod.capabilities()
         self.assertEqual(caps["ai_background_removal"]["status"], "done")

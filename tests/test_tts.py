@@ -88,6 +88,9 @@ class TestMuseProviderRegistered(unittest.TestCase):
 
 
 class TestMuseProviderMocked(unittest.TestCase):
+    @unittest.skipUnless(
+        os.path.isfile(tts_mod.MUSE_TTS_BIN),
+        "Muse TTS binary not present on this machine")
     def test_synthesize_wav_calls_binary_with_production_defaults(self):
         calls = []
         provider = tts_mod.MuseTTSProvider()
@@ -108,6 +111,9 @@ class TestMuseProviderMocked(unittest.TestCase):
             self.assertEqual(cmd[cmd.index("--speed") + 1], "90")
             self.assertEqual(cmd[cmd.index("--format") + 1], "mp3")
 
+    @unittest.skipUnless(
+        os.path.isfile(tts_mod.MUSE_TTS_BIN),
+        "Muse TTS binary not present on this machine")
     def test_synthesize_mp3_writes_directly(self):
         provider = tts_mod.MuseTTSProvider()
         with tempfile.TemporaryDirectory() as d:
@@ -119,6 +125,9 @@ class TestMuseProviderMocked(unittest.TestCase):
             self.assertTrue(os.path.isfile(out))
             self.assertGreater(os.path.getsize(out), 0)
 
+    @unittest.skipUnless(
+        os.path.isfile(tts_mod.MUSE_TTS_BIN),
+        "Muse TTS binary not present on this machine")
     def test_retry_keeps_same_voice_then_succeeds(self):
         calls = []
         provider = tts_mod.MuseTTSProvider(retries=3)
