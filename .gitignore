@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Renders and generated media (never commit videos/audio)
+*.mp4
+*.mov
+*.mkv
+*.webm
+*.mp3
+*.wav
+*.aac
+*.png
+*.jpg
+*.jpeg
+*.ass
+*.srt
+!examples/*.json
+
+# MuseCut workdirs
+.tmp/
+work/
+renders/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
