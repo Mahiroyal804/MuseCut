@@ -1,0 +1,129 @@
+{
+ "background": "#000000",
+ "captions": {
+  "style": "viral-gold",
+  "words": [
+   {
+    "end": 0.5,
+    "start": 0.2,
+    "word": "This"
+   },
+   {
+    "end": 0.7,
+    "start": 0.5,
+    "word": "is"
+   },
+   {
+    "end": 1.2,
+    "start": 0.7,
+    "word": "MuseCut"
+   },
+   {
+    "end": 1.7,
+    "start": 1.2,
+    "word": "rendering"
+   },
+   {
+    "end": 1.8,
+    "start": 1.7,
+    "word": "a"
+   },
+   {
+    "end": 2.1,
+    "start": 1.8,
+    "word": "real"
+   },
+   {
+    "end": 2.6,
+    "start": 2.1,
+    "word": "video"
+   },
+   {
+    "end": 3.3,
+    "start": 3.0,
+    "word": "from"
+   },
+   {
+    "end": 3.4,
+    "start": 3.3,
+    "word": "a"
+   },
+   {
+    "end": 3.9,
+    "start": 3.4,
+    "word": "JSON"
+   },
+   {
+    "end": 4.5,
+    "start": 3.9,
+    "word": "timeline"
+   }
+  ]
+ },
+ "clips": [
+  {
+   "duration": 3,
+   "effects": {
+    "filter": "cinematic",
+    "grain": 0.4,
+    "vignette": 0.5
+   },
+   "keyframes": {
+    "zoom": {
+     "from": 1.0,
+     "to": 1.2
+    }
+   },
+   "src": "testsrc"
+  },
+  {
+   "duration": 3,
+   "src": "color:#14324F",
+   "transition_in": {
+    "duration": 0.6,
+    "type": "crossfade"
+   }
+  },
+  {
+   "duration": 3,
+   "speed": 1.5,
+   "src": "color:#7A1F2B",
+   "transition_in": {
+    "duration": 0.5,
+    "type": "dip-to-black"
+   }
+  }
+ ],
+ "endcard": {
+  "background": "#0B0B0B",
+  "duration": 3,
+  "subtitle": "MuseCut \u2014 built for agents",
+  "title": "Watch next"
+ },
+ "fps": 30,
+ "height": 720,
+ "name": "musecut-demo",
+ "texts": [
+  {
+   "animation": "slide-up",
+   "color": "#FFFFFF",
+   "duration": 2.5,
+   "font": "Anton",
+   "size": 96,
+   "start": 0.5,
+   "text": "MuseCut",
+   "y": 0.12
+  },
+  {
+   "animation": "fade",
+   "color": "#FFD60A",
+   "duration": 2.5,
+   "font": "Inter",
+   "size": 40,
+   "start": 3.5,
+   "text": "No login. No watermark. Just render."
+  }
+ ],
+ "version": 1,
+ "width": 1280
+}
