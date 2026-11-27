@@ -1,6 +1,6 @@
 # MuseCut 🎬
 
-[![Tests](https://github.com/Mahiroyal804/MuseCut/actions/workflows/tests.yml/badge.svg)](https://github.com/Mahiroyal804/MuseCut/actions/workflows/tests.yml)
+[![Tests](https://github.com/Mahiroyal804/MuseCut/actions/workflows/tests.yml/badge.svg?branch=main)](https://github.com/Mahiroyal804/MuseCut/actions/workflows/tests.yml)
 [![Version](https://img.shields.io/badge/version-0.21.0-blue)](https://github.com/Mahiroyal804/MuseCut/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
